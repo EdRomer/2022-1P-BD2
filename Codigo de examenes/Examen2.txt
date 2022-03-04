@@ -1,0 +1,42 @@
+DELIMITER //
+CREATE  PROCEDURE  bd_factsv2.Examen2 (
+	in p_idfactura int,
+    in p_idproducto int,
+    in p_cantidad int
+ )
+BEGIN 
+	declare  v_idfactura int; 
+	declare  v_idproducto int; 
+	declare  v_cantidad int;
+    declare  v_saldounidades int;
+    declare  v_precioVenta int;
+    declare  v_impuestosobreventa int;
+    
+    set v_idfactura		= p_idfactura;
+	set v_idproducto	= p_idproducto; 
+    set v_cantidad		= p_cantidad;
+    select saldounidades into v_saldounidades from tbl_productos where idProducto=v_idproducto;
+    select precioVenta into v_precioVenta from tbl_productos where idProducto=v_idproducto;
+    set v_impuestosobreventa = v_precioVenta*0.15;
+    
+	if saldounidades>=v_cantidad then
+    #Insertar un nuevo producto en la tabla de productos facturados para un idfactura determinada solo si el saldo de unidades del producto idproducto es mayor o igual a la cantidad de productos indicada. 
+		insert into tbl_productos_facturados
+			(idProducto,idFactura,cantidad,impuestosobreventa,precioVenta)
+        values 
+			(v_idproducto,v_idfactura,v_cantidad,v_impuestosobreventa,v_precioVenta);
+            
+	#Luego de realizar la inserción, debe actualizar el campo de saldo de unidades en la tabla productos, descontando la cantidad de productos registrados en el inciso anterior. 
+        update tbl_productos set saldounidades=saldounidades-v_cantidad where idProducto=idProducto;
+	
+    #Después, debe actualizar los campos de la factura con idfactura con los nuevos valores generados con la adición del producto.
+		update tbl_facturas set 
+			cantidadProductos = cantidadProductos+v_cantidad,
+			subTotalPagar = subTotalPagar+v_precioVenta,
+            totalISV = totalISV + v_impuestosobreventa,
+            totalpagar = totalISV+subTotalPagar
+		where idFactura=v_idfactura;
+	end if;
+    commit;
+ END; 
+ 
