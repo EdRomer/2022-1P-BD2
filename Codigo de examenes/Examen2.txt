@@ -28,7 +28,7 @@ BEGIN
 			(v_idproducto,v_idfactura,v_cantidad,v_impuestosobreventa,v_precioVenta);
             
 	#Luego de realizar la inserción, debe actualizar el campo de saldo de unidades en la tabla productos, descontando la cantidad de productos registrados en el inciso anterior. 
-        update tbl_productos set saldounidades=saldounidades+v_cantidad where idProducto=v_idproducto;
+        update tbl_productos set saldounidades=saldounidades-v_cantidad where idProducto=v_idproducto;
 	
     #Después, debe actualizar los campos de la factura con idfactura con los nuevos valores generados con la adición del producto.
 		update tbl_facturas set 
